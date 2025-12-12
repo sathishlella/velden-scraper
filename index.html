@@ -2,275 +2,654 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Velden Health – IL BH NPI Scraper</title>
+  <title>Velden – NPI Behavioral Health Scraper</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      margin: 20px;
-      background: #f7f7f7;
+      margin: 0;
+      background: #f5f7fb;
+      color: #111827;
     }
+
+    .container {
+      max-width: 1120px;
+      margin: 24px auto 40px;
+      padding: 24px 20px 32px;
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.14);
+    }
+
     h1 {
-      font-size: 22px;
-      margin-bottom: 8px;
-    }
-    .controls {
-      margin-bottom: 16px;
+      margin-top: 0;
+      font-size: 24px;
       display: flex;
-      gap: 12px;
       align-items: center;
-      flex-wrap: wrap;
+      gap: 8px;
     }
-    button {
-      padding: 8px 14px;
-      border-radius: 4px;
-      border: 1px solid #888;
-      cursor: pointer;
-      background: white;
+
+    h1 span.logo {
+      display: inline-flex;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: #2563eb;
+      color: #fff;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
     }
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    label {
+
+    .subtitle {
+      margin: 4px 0 18px;
+      color: #6b7280;
       font-size: 14px;
     }
-    input[type="number"] {
-      width: 80px;
-      padding: 4px;
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px 16px;
+      margin-bottom: 16px;
+      padding: 14px 14px 8px;
+      border-radius: 14px;
+      background: #f9fafb;
     }
-    #status {
-      margin-top: 6px;
-      font-size: 13px;
-      color: #555;
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #6b7280;
+      margin-bottom: 4px;
     }
-    table {
-      border-collapse: collapse;
+
+    input {
       width: 100%;
-      background: white;
-      margin-top: 16px;
+      padding: 7px 9px;
+      border-radius: 9px;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+      outline: none;
+      background: #ffffff;
+    }
+
+    input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35);
+    }
+
+    .form-actions {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 9px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    button.primary {
+      background: #2563eb;
+      color: #ffffff;
+    }
+
+    button.primary:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    button.secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    #status {
+      min-height: 20px;
+      margin: 2px 0 10px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    #status.error {
+      color: #b91c1c;
+    }
+
+    #status.success {
+      color: #047857;
+    }
+
+    .table-wrapper {
+      margin-top: 10px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      max-height: 520px;
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
       font-size: 13px;
     }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 6px 8px;
-      vertical-align: top;
-    }
-    th {
-      background: #f0f0f0;
+
+    thead {
       position: sticky;
       top: 0;
+      background: #f3f4f6;
       z-index: 1;
     }
-    .fit-high {
-      background: #d6f5d6;
+
+    th,
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #e5e7eb;
+      vertical-align: top;
     }
-    .fit-medium {
-      background: #fff7d6;
+
+    th {
+      text-align: left;
+      font-weight: 600;
+      color: #374151;
+      font-size: 12px;
     }
-    .fit-low {
-      background: #f5d6d6;
+
+    tr:nth-child(even) td {
+      background: #fafafa;
     }
-    .small {
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
       font-size: 11px;
-      color: #666;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      margin-right: 4px;
+    }
+
+    .fit-high {
+      background: #ecfdf3;
+      color: #166534;
+      border-color: #bbf7d0;
+    }
+
+    .fit-medium {
+      background: #fefce8;
+      color: #854d0e;
+      border-color: #fef08a;
+    }
+
+    .fit-low {
+      background: #f9fafb;
+      color: #4b5563;
+      border-color: #e5e7eb;
+    }
+
+    .footer-note {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    @media (max-width: 720px) {
+      .container {
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      th:nth-child(5),
+      td:nth-child(5),
+      th:nth-child(7),
+      td:nth-child(7) {
+        display: none; /* hide taxonomy & VeldenFit on tiny screens */
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Velden Health – Illinois Behavioral Health NPI Scraper</h1>
-  <p class="small">
-    Fetches Illinois <strong>organization</strong> NPIs with taxonomy <strong>Clinic/Center – Mental Health (261QM0801X)</strong>
-    and gives a rough “Velden fit” guess. You still need to Google for exact websites and do manual validation.
-  </p>
+  <div class="container">
+    <h1>
+      <span class="logo">V</span>
+      Velden – IL Behavioral NPI Scraper
+    </h1>
+    <div class="subtitle">
+      Fetch behavioral &amp; mental health providers from the official
+      NPPES NPI Registry API, filtered to Illinois and tagged with a
+      <strong>VeldenFit</strong> guess (clinic vs solo, etc.).
+    </div>
 
-  <div class="controls">
-    <button id="fetchBtn">Fetch IL Mental Health Clinics (NPI-2)</button>
-    <label>
-      Limit:
-      <input type="number" id="limitInput" value="50" min="1" max="200" />
-    </label>
-    <button id="clearBtn">Clear Table</button>
+    <form id="config-form">
+      <div>
+        <label for="state">State (2-letter)</label>
+        <input id="state" maxlength="2" value="IL" />
+      </div>
+
+      <div>
+        <label for="max-org">Max org results per taxonomy</label>
+        <input id="max-org" type="number" min="10" max="200" value="200" />
+      </div>
+
+      <div>
+        <label for="max-ind">Max individual results per taxonomy</label>
+        <input id="max-ind" type="number" min="10" max="200" value="200" />
+      </div>
+
+      <div class="form-actions">
+        <button type="button" id="run-btn" class="primary">
+          🧠 Run IL Behavioral Scrape
+        </button>
+        <button type="button" id="download-btn" class="secondary" disabled>
+          ⬇️ Download CSV
+        </button>
+      </div>
+    </form>
+
+    <div id="status"></div>
+
+    <div class="table-wrapper" id="table-wrapper" style="display:none;">
+      <table id="results-table">
+        <thead>
+          <tr>
+            <th>NPI</th>
+            <th>Name</th>
+            <th>Entity</th>
+            <th>City</th>
+            <th>Address</th>
+            <th>Phone</th>
+            <th>Primary Taxonomy</th>
+            <th>VeldenFit</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="footer-note">
+      Data from the official NPPES NPI Registry API (HHS/CMS). This tool is
+      read-only and for informational use. If you see CORS errors, open this
+      file via a small local server (for example:
+      <code>python -m http.server 8000</code>).
+    </div>
   </div>
 
-  <div id="status"></div>
-
-  <table id="resultsTable">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Clinic Name</th>
-        <th>Address</th>
-        <th>Phone</th>
-        <th>Taxonomy</th>
-        <th>Velden Fit?</th>
-        <th>Notes / Website (manual)</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
   <script>
-    const fetchBtn = document.getElementById("fetchBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const limitInput = document.getElementById("limitInput");
+    // ---------------- CONFIG ----------------
+
+    const NPI_API_URL = "https://npiregistry.cms.hhs.gov/api/";
+
+    // Behavioral / mental health taxonomy codes
+    // Orgs = clinics / centers, Individuals = therapists, psychologists, etc.
+    const BEHAVIORAL_TAXONOMIES_ORG = [
+      "251S00000X",  // Community/Behavioral Health
+      "261QM0801X",  // Clinic/Center - Mental Health (incl CMHC)
+      "261QM0850X",  // Adult Mental Health (if present)
+      "261QM0855X",  // Child & Adolescent Mental Health (if present)
+    ];
+
+    const BEHAVIORAL_TAXONOMIES_INDIVIDUAL = [
+      "101YM0800X",  // Counselor - Mental Health
+      "101YP2500X",  // Counselor - Professional
+      "104100000X",  // Social Worker
+      "1041C0700X",  // Social Worker - Clinical
+      "106H00000X",  // Marriage & Family Therapist
+      "103T00000X",  // Psychologist
+      "103TC0700X",  // Psychologist - Clinical
+    ];
+
+    const runBtn = document.getElementById("run-btn");
+    const downloadBtn = document.getElementById("download-btn");
     const statusEl = document.getElementById("status");
-    const tbody = document.querySelector("#resultsTable tbody");
+    const tbody = document.querySelector("#results-table tbody");
+    const tableWrapper = document.getElementById("table-wrapper");
 
-    // Heuristic: guess how good a lead this is for Velden
-    function guessVeldenFit(orgName, taxonomies) {
-      const name = (orgName || "").toLowerCase();
-      const taxDesc = (taxonomies && taxonomies[0] && taxonomies[0].desc || "").toLowerCase();
+    let lastRows = [];
 
-      let score = 0;
-      let reasons = [];
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
 
-      // Base: if taxonomy mentions mental or behavioral health, bump
-      if (taxDesc.includes("mental") || taxDesc.includes("behavioral")) {
-        score += 2;
-        reasons.push("Taxonomy mental/behavioral health");
+    function setStatus(msg, type) {
+      statusEl.textContent = msg || "";
+      statusEl.className = "";
+      if (type) statusEl.classList.add(type);
+    }
+
+    function buildNpiUrl(params, limit) {
+      const url = new URL(NPI_API_URL);
+      url.searchParams.set("version", "2.1");
+      url.searchParams.set("limit", String(limit || 200));
+      Object.entries(params).forEach(([k, v]) => {
+        if (v != null && v !== "") url.searchParams.set(k, v);
+      });
+      return url.toString();
+    }
+
+    async function callNpiApi(params, limit) {
+      const url = buildNpiUrl(params, limit);
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error("HTTP " + res.status);
       }
+      const data = await res.json();
+      return data.results || [];
+    }
 
-      // Name keywords
-      const keywordsStrong = ["behavioral", "behavioural", "counseling", "counselling", "therapy", "therapies", "psychiatry", "psychological", "mental health"];
-      const keywordsMedium = ["wellness", "mind", "psych"];
+    function formatName(result) {
+      const basic = result.basic || {};
+      if (basic.organization_name) return basic.organization_name.trim();
+      const first = (basic.first_name || "").trim();
+      const last = (basic.last_name || "").trim();
+      const name = (first + " " + last).trim();
+      return name || basic.organization_name || "";
+    }
 
-      if (keywordsStrong.some(k => name.includes(k))) {
-        score += 2;
-        reasons.push("Name contains strong BH keyword");
-      } else if (keywordsMedium.some(k => name.includes(k))) {
-        score += 1;
-        reasons.push("Name contains medium BH keyword");
+    function pickPracticeAddress(addresses) {
+      if (!Array.isArray(addresses) || !addresses.length) {
+        return { address: "", city: "", phone: "" };
       }
+      const loc =
+        addresses.find((a) => a.address_purpose === "LOCATION") || addresses[0];
 
-      // Penalize if clearly hospital/huge system language
-      const bigSystemWords = ["hospital", "medical center", "university", "system", "state of", "county health"];
-      if (bigSystemWords.some(k => name.includes(k))) {
-        score -= 2;
-        reasons.push("Likely large system (name)");
-      }
+      const clean = (x) => (x || "").trim();
 
-      let fitClass = "fit-medium";
-      let label = "Maybe";
+      const line1 = clean(loc.address_1);
+      const line2 = clean(loc.address_2);
+      const city = clean(loc.city);
+      const state = clean(loc.state);
+      const postal = clean(loc.postal_code);
+      const phone = clean(loc.telephone_number);
 
-      if (score >= 3) {
-        fitClass = "fit-high";
-        label = "High (likely small BH clinic)";
-      } else if (score <= 0) {
-        fitClass = "fit-low";
-        label = "Low (probably not a small BH practice)";
-      }
-
+      const parts = [line1, line2, city, state, postal].filter(Boolean);
       return {
-        score,
-        label,
-        reasons: reasons.join("; "),
-        fitClass
+        address: parts.join(", "),
+        city,
+        phone,
       };
     }
 
-    function formatAddress(addressObj) {
-      if (!addressObj) return "";
-      const parts = [
-        addressObj.address_1,
-        addressObj.address_2,
-        addressObj.city,
-        addressObj.state,
-        addressObj.postal_code
-      ].filter(Boolean);
-
-      return parts.join(", ");
+    function pickPrimaryTaxonomy(taxonomies) {
+      if (!Array.isArray(taxonomies) || !taxonomies.length) {
+        return { code: "", desc: "" };
+      }
+      const primary = taxonomies.find((t) => t.primary) || taxonomies[0];
+      const code =
+        (primary.code || primary.taxonomy_code || "").trim();
+      const desc = (primary.desc || "").trim();
+      return { code, desc };
     }
 
-    function formatTaxonomy(taxonomies) {
-      if (!taxonomies || !taxonomies.length) return "";
-      // Prefer primary taxonomy
-      const primary = taxonomies.find(t => t.primary) || taxonomies[0];
-      return primary.desc || "";
+    function classifyVeldenFit(result) {
+      const type = result.enumeration_type || "";
+      const { code, desc } = pickPrimaryTaxonomy(result.taxonomies || []);
+
+      const descLower = desc.toLowerCase();
+
+      if (type === "Organization" && BEHAVIORAL_TAXONOMIES_ORG.includes(code)) {
+        return {
+          label: "High – BH clinic (Velden core target)",
+          className: "fit-high",
+        };
+      }
+
+      if (
+        type === "Individual" &&
+        BEHAVIORAL_TAXONOMIES_INDIVIDUAL.includes(code)
+      ) {
+        return {
+          label: "Medium – solo BH provider (possible Velden client)",
+          className: "fit-medium",
+        };
+      }
+
+      if (descLower.includes("behavior") || descLower.includes("mental")) {
+        return {
+          label: "Medium – BH related, check manually",
+          className: "fit-medium",
+        };
+      }
+
+      return {
+        label: "Low/Unknown – probably not a fit or needs manual review",
+        className: "fit-low",
+      };
     }
 
-    async function fetchNpiData() {
-      const limit = parseInt(limitInput.value, 10) || 50;
-      statusEl.textContent = "Fetching from NPI Registry API...";
-      fetchBtn.disabled = true;
+    function flattenResult(result) {
+      const npi = String(result.number || "").trim();
+      if (!npi) return null;
+
+      const name = formatName(result);
+      const { address, city, phone } = pickPracticeAddress(
+        result.addresses || []
+      );
+      const { code, desc } = pickPrimaryTaxonomy(result.taxonomies || []);
+      const fit = classifyVeldenFit(result);
+
+      return {
+        NPI: npi,
+        EntityType: result.enumeration_type || "",
+        Name: name,
+        City: city,
+        Address: address,
+        Phone: phone,
+        Website: "", // to be filled later manually
+        PrimaryTaxonomyCode: code,
+        PrimaryTaxonomyDesc: desc,
+        VeldenFit: fit.label,
+        VeldenFitClass: fit.className,
+      };
+    }
+
+    function renderTable(rows) {
+      tbody.innerHTML = "";
+      rows.forEach((row) => {
+        const tr = document.createElement("tr");
+
+        function td(text) {
+          const cell = document.createElement("td");
+          cell.textContent = text || "";
+          return cell;
+        }
+
+        tr.appendChild(td(row.NPI));
+        tr.appendChild(td(row.Name));
+        const entityTd = td(row.EntityType);
+        entityTd.innerHTML = `<span class="badge">${row.EntityType}</span>`;
+        tr.appendChild(entityTd);
+        tr.appendChild(td(row.City));
+        tr.appendChild(td(row.Address));
+        tr.appendChild(td(row.Phone));
+        tr.appendChild(
+          td(`${row.PrimaryTaxonomyCode} – ${row.PrimaryTaxonomyDesc}`)
+        );
+
+        const fitTd = document.createElement("td");
+        fitTd.innerHTML = `<span class="badge ${row.VeldenFitClass}">${row.VeldenFit}</span>`;
+        tr.appendChild(fitTd);
+
+        tbody.appendChild(tr);
+      });
+
+      tableWrapper.style.display = rows.length ? "block" : "none";
+    }
+
+    function toCsv(rows) {
+      const header = [
+        "NPI",
+        "EntityType",
+        "Name",
+        "City",
+        "Address",
+        "Phone",
+        "Website",
+        "PrimaryTaxonomyCode",
+        "PrimaryTaxonomyDesc",
+        "VeldenFit",
+      ];
+
+      const escape = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+
+      const lines = [
+        header.join(","),
+        ...rows.map((r) =>
+          [
+            r.NPI,
+            r.EntityType,
+            r.Name,
+            r.City,
+            r.Address,
+            r.Phone,
+            r.Website,
+            r.PrimaryTaxonomyCode,
+            r.PrimaryTaxonomyDesc,
+            r.VeldenFit,
+          ].map(escape).join(",")
+        ),
+      ];
+
+      return lines.join("\r\n");
+    }
+
+    downloadBtn.addEventListener("click", () => {
+      if (!lastRows.length) return;
+      const csv = toCsv(lastRows);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "velden_il_behavioral_npi.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    runBtn.addEventListener("click", async () => {
+      const state = (document.getElementById("state").value || "IL").trim();
+      const maxOrg = Number(
+        document.getElementById("max-org").value || "200"
+      );
+      const maxInd = Number(
+        document.getElementById("max-ind").value || "200"
+      );
+
+      if (!state || state.length !== 2) {
+        setStatus("State must be a 2-letter code (e.g., IL).", "error");
+        return;
+      }
+
+      runBtn.disabled = true;
+      downloadBtn.disabled = true;
+      tableWrapper.style.display = "none";
+      tbody.innerHTML = "";
+      lastRows = [];
+      setStatus("Calling NPI API for behavioral ORGS in " + state + "...", "");
 
       try {
-        // NPI-2 = organization; taxonomy 261QM0801X = Clinic/Center – Mental Health
-        const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&state=IL&enumeration_type=NPI-2&taxonomy=261QM0801X&limit=${limit}`;
-        const res = await fetch(url);
-        if (!res.ok) {
-          throw new Error("HTTP " + res.status);
-        }
-        const data = await res.json();
-
-        const results = data.results || [];
-        statusEl.textContent = `Fetched ${results.length} records. Rendering table…`;
-
-        tbody.innerHTML = ""; // clear
-
-        results.forEach((r, idx) => {
-          const basic = r.basic || {};
-          const orgName = basic.organization_name || basic.name || "(No name)";
-          const addresses = r.addresses || [];
-          const locationAddress = addresses.find(a => a.address_purpose === "LOCATION") || addresses[0] || {};
-          const phone = locationAddress.telephone_number || "";
-
-          const taxonomies = r.taxonomies || [];
-          const taxonomyText = formatTaxonomy(taxonomies);
-
-          const fit = guessVeldenFit(orgName, taxonomies);
-
-          const tr = document.createElement("tr");
-          if (fit.fitClass) {
-            tr.classList.add(fit.fitClass);
+        const orgRows = [];
+        for (const tax of BEHAVIORAL_TAXONOMIES_ORG) {
+          setStatus(
+            `Fetching ORGs – taxonomy ${tax}…`,
+            ""
+          );
+          const results = await callNpiApi(
+            {
+              state: state.toUpperCase(),
+              enumeration_type: "NPI-2",
+              taxonomy: tax,
+            },
+            maxOrg
+          );
+          for (const r of results) {
+            const flat = flattenResult(r);
+            if (flat && !orgRows.find((x) => x.NPI === flat.NPI)) {
+              orgRows.push(flat);
+            }
           }
+          await sleep(400);
+        }
 
-          const idxTd = document.createElement("td");
-          idxTd.textContent = idx + 1;
+        const indRows = [];
+        setStatus("Calling NPI API for behavioral INDIVIDUALS…", "");
+        for (const tax of BEHAVIORAL_TAXONOMIES_INDIVIDUAL) {
+          setStatus(
+            `Fetching INDs – taxonomy ${tax}…`,
+            ""
+          );
+          const results = await callNpiApi(
+            {
+              state: state.toUpperCase(),
+              enumeration_type: "NPI-1",
+              taxonomy: tax,
+            },
+            maxInd
+          );
+          for (const r of results) {
+            const flat = flattenResult(r);
+            if (flat && !indRows.find((x) => x.NPI === flat.NPI)) {
+              indRows.push(flat);
+            }
+          }
+          await sleep(400);
+        }
 
-          const nameTd = document.createElement("td");
-          nameTd.textContent = orgName;
+        const allRows = [...orgRows, ...indRows];
 
-          const addrTd = document.createElement("td");
-          addrTd.textContent = formatAddress(locationAddress);
-
-          const phoneTd = document.createElement("td");
-          phoneTd.textContent = phone;
-
-          const taxTd = document.createElement("td");
-          taxTd.textContent = taxonomyText;
-
-          const fitTd = document.createElement("td");
-          fitTd.innerHTML = `<strong>${fit.label}</strong><br/><span class="small">${fit.reasons}</span>`;
-
-          const notesTd = document.createElement("td");
-          notesTd.innerHTML = '<span class="small">Add website + notes manually after Googling the clinic.</span>';
-
-          tr.appendChild(idxTd);
-          tr.appendChild(nameTd);
-          tr.appendChild(addrTd);
-          tr.appendChild(phoneTd);
-          tr.appendChild(taxTd);
-          tr.appendChild(fitTd);
-          tr.appendChild(notesTd);
-
-          tbody.appendChild(tr);
+        // Sort: orgs first, then by city & name
+        allRows.sort((a, b) => {
+          if (a.EntityType !== b.EntityType) {
+            return a.EntityType === "Organization" ? -1 : 1;
+          }
+          if (a.City !== b.City) {
+            return (a.City || "").localeCompare(b.City || "");
+          }
+          return (a.Name || "").localeCompare(b.Name || "");
         });
 
-        if (!results.length) {
-          statusEl.textContent = "No results returned. Check filters or try again.";
+        lastRows = allRows;
+        renderTable(allRows);
+
+        if (allRows.length) {
+          setStatus(
+            `Done. ${allRows.length} behavioral providers found in ${state}. Orgs first, with VeldenFit guesses.`,
+            "success"
+          );
+          downloadBtn.disabled = false;
+        } else {
+          setStatus("No results found. Try adjusting state/limits.", "error");
         }
       } catch (err) {
         console.error(err);
-        statusEl.textContent = "Error fetching from NPI Registry. Check console/logs.";
+        setStatus(
+          "Error calling NPI API. If you see a CORS error in DevTools, run this file through a small local server (python -m http.server).",
+          "error"
+        );
       } finally {
-        fetchBtn.disabled = false;
+        runBtn.disabled = false;
       }
-    }
-
-    fetchBtn.addEventListener("click", fetchNpiData);
-    clearBtn.addEventListener("click", () => {
-      tbody.innerHTML = "";
-      statusEl.textContent = "Cleared table.";
     });
   </script>
 </body>
