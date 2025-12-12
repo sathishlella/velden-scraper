@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Velden NPI Scraper – IL Behavioral Health Clinics</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #111827;
+      background: #f3f4f6;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f3f4f6;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 0.25rem;
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      margin: 1.5rem 0 0.75rem;
+    }
+
+    p {
+      margin: 0.25rem 0;
+      color: #4b5563;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px 18px;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+      margin-top: 16px;
+    }
+
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 8px;
+      align-items: flex-end;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      min-width: 150px;
+      flex: 1;
+    }
+
+    label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #6b7280;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    select,
+    input {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 0.9rem;
+      outline: none;
+      background: #f9fafb;
+    }
+
+    select:focus,
+    input:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.2);
+      background: #ffffff;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 9px 18px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: #4f46e5;
+      color: #ffffff;
+    }
+
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .btn-primary:disabled,
+    .btn-secondary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    .status strong {
+      color: #111827;
+    }
+
+    .results-wrapper {
+      margin-top: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    thead {
+      background: #111827;
+      color: #f9fafb;
+    }
+
+    th,
+    td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+      vertical-align: top;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f9fafb;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      background: #e0e7ff;
+      color: #3730a3;
+      margin-right: 4px;
+      margin-bottom: 3px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      background: #eef2ff;
+      color: #4338ca;
+      margin-left: 6px;
+    }
+
+    @media (max-width: 768px) {
+      .form-row {
+        flex-direction: column;
+      }
+
+      table,
+      thead,
+      tbody,
+      th,
+      td,
+      tr {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        margin-bottom: 12px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+        background: #ffffff;
+      }
+
+      td {
+        border-bottom: 1px solid #e5e7eb;
+        padding: 6px 10px;
+      }
+
+      td::before {
+        content: attr(data-label);
+        display: block;
+        font-weight: 600;
+        color: #6b7280;
+        margin-bottom: 2px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Velden – IL Behavioral Health NPI Finder</h1>
+    <p>
+      Quick finder for <strong>Illinois outpatient behavioral / mental health clinics</strong> using the official NPI
+      Registry API. Use this to populate your Clinic Pipeline in Notion.
+    </p>
+
+    <div class="card">
+      <h2>Search configuration</h2>
+      <p style="margin-bottom: 0.5rem;">
+        We’re focusing on <strong>Organization (NPI-2)</strong> records in Illinois with behavioral / mental health
+        taxonomies.
+      </p>
+
+      <div class="form-row">
+        <div class="field">
+          <label for="taxonomy">Taxonomy</label>
+          <select id="taxonomy">
+            <option value="261QM0801X">Clinic/Center – Mental Health (261QM0801X)</option>
+            <option value="251S00000X">Community/Behavioral Health (251S00000X)</option>
+            <option value="261QM0850X">Clinic/Center – Adolescent &amp; Children Mental Health (261QM0850X)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="state">State</label>
+          <input id="state" type="text" value="IL" maxlength="2" />
+        </div>
+
+        <div class="field">
+          <label for="limit">Max records</label>
+          <input id="limit" type="number" min="1" max="200" value="100" />
+        </div>
+
+        <div class="field" style="max-width: 170px;">
+          <button id="searchBtn" class="btn-primary">
+            🔎 Search NPI
+          </button>
+        </div>
+      </div>
+
+      <p class="status" id="statusText">Ready. Choose taxonomy and click <strong>Search NPI</strong>.</p>
+    </div>
+
+    <div class="card results-wrapper" id="resultsCard" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <h2 style="margin: 0;">Results</h2>
+        <button id="downloadBtn" class="btn-secondary" disabled>⬇️ Download CSV</button>
+      </div>
+      <p class="status" id="resultSummary"></p>
+      <div style="overflow-x: auto; margin-top: 10px;">
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>NPI</th>
+              <th>Taxonomy</th>
+              <th>Address</th>
+              <th>Phone</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody">
+            <!-- rows inserted here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const searchBtn = document.getElementById("searchBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const statusText = document.getElementById("statusText");
+    const resultSummary = document.getElementById("resultSummary");
+    const resultsCard = document.getElementById("resultsCard");
+    const resultsBody = document.getElementById("resultsBody");
+
+    let lastResults = [];
+
+    function buildNpiUrl({ state, taxonomy, limit }) {
+      const base = "https://npiregistry.cms.hhs.gov/api/";
+      const params = new URLSearchParams({
+        version: "2.1",
+        state: state,
+        taxonomy: taxonomy,
+        enumeration_type: "NPI-2", // organizations only
+        limit: String(limit),
+      });
+      return `${base}?${params.toString()}`;
+    }
+
+    function getPracticeAddress(addresses = []) {
+      if (!Array.isArray(addresses)) return {};
+      // Prefer "LOCATION" address, else first
+      const location = addresses.find((a) => a.address_purpose === "LOCATION") || addresses[0];
+      if (!location) return {};
+      return {
+        address_1: location.address_1 || "",
+        address_2: location.address_2 || "",
+        city: location.city || "",
+        state: location.state || "",
+        postal_code: location.postal_code || "",
+        telephone_number: location.telephone_number || "",
+      };
+    }
+
+    function formatAddress(addr) {
+      if (!addr || !addr.address_1) return "";
+      const parts = [
+        addr.address_1,
+        addr.address_2,
+        `${addr.city || ""}${addr.city ? "," : ""} ${addr.state || ""} ${addr.postal_code || ""}`.trim(),
+      ];
+      return parts.filter((p) => p && p.trim().length > 0).join(", ");
+    }
+
+    function extractTaxonomyDisplay(taxonomies = []) {
+      if (!Array.isArray(taxonomies) || taxonomies.length === 0) return "";
+      // prefer primary
+      const primary = taxonomies.find((t) => t.primary) || taxonomies[0];
+      if (!primary) return "";
+      const code = primary.code || "";
+      const desc = primary.desc || "";
+      return { code, desc };
+    }
+
+    function renderResults(results) {
+      resultsBody.innerHTML = "";
+
+      if (!results || results.length === 0) {
+        resultSummary.textContent = "No results found for this filter.";
+        downloadBtn.disabled = true;
+        return;
+      }
+
+      results.forEach((item) => {
+        const basic = item.basic || {};
+        const name =
+          basic.organization_name ||
+          [basic.first_name, basic.last_name].filter(Boolean).join(" ") ||
+          "(No name)";
+
+        const npi = item.number || "";
+        const address = getPracticeAddress(item.addresses);
+        const taxonomyInfo = extractTaxonomyDisplay(item.taxonomies);
+        const tel = address.telephone_number || "";
+
+        const tr = document.createElement("tr");
+
+        const nameTd = document.createElement("td");
+        nameTd.textContent = name;
+        nameTd.setAttribute("data-label", "Name");
+
+        const npiTd = document.createElement("td");
+        npiTd.textContent = npi;
+        npiTd.setAttribute("data-label", "NPI");
+
+        const taxTd = document.createElement("td");
+        taxTd.setAttribute("data-label", "Taxonomy");
+        if (taxonomyInfo.desc) {
+          const tag = document.createElement("span");
+          tag.className = "tag";
+          tag.textContent = taxonomyInfo.desc;
+          taxTd.appendChild(tag);
+        }
+        if (taxonomyInfo.code) {
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          badge.textContent = taxonomyInfo.code;
+          taxTd.appendChild(badge);
+        }
+
+        const addrTd = document.createElement("td");
+        addrTd.textContent = formatAddress(address);
+        addrTd.setAttribute("data-label", "Address");
+
+        const phoneTd = document.createElement("td");
+        phoneTd.textContent = tel;
+        phoneTd.setAttribute("data-label", "Phone");
+
+        tr.appendChild(nameTd);
+        tr.appendChild(npiTd);
+        tr.appendChild(taxTd);
+        tr.appendChild(addrTd);
+        tr.appendChild(phoneTd);
+
+        resultsBody.appendChild(tr);
+      });
+
+      resultSummary.textContent = `Showing ${results.length} result(s). Use Download CSV to move them into your pipeline.`;
+      downloadBtn.disabled = false;
+    }
+
+    function toCsv(results) {
+      const header = ["Name", "NPI", "TaxonomyDesc", "TaxonomyCode", "Address", "Phone"];
+      const rows = [header];
+
+      results.forEach((item) => {
+        const basic = item.basic || {};
+        const name =
+          basic.organization_name ||
+          [basic.first_name, basic.last_name].filter(Boolean).join(" ") ||
+          "";
+        const npi = item.number || "";
+        const address = getPracticeAddress(item.addresses);
+        const taxonomyInfo = extractTaxonomyDisplay(item.taxonomies);
+
+        const row = [
+          name.replace(/"/g, '""'),
+          npi,
+          (taxonomyInfo.desc || "").replace(/"/g, '""'),
+          taxonomyInfo.code || "",
+          formatAddress(address).replace(/"/g, '""'),
+          (address.telephone_number || "").replace(/"/g, '""'),
+        ];
+
+        rows.push(row);
+      });
+
+      return rows
+        .map((cols) => cols.map((c) => `"${c}"`).join(","))
+        .join("\r\n");
+    }
+
+    function downloadCsv() {
+      if (!lastResults || lastResults.length === 0) return;
+      const csv = toCsv(lastResults);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "velden_il_bh_npi_results.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    async function runSearch() {
+      const taxonomy = document.getElementById("taxonomy").value.trim();
+      const state = (document.getElementById("state").value || "IL").trim().toUpperCase();
+      const limitInput = document.getElementById("limit").value;
+      let limit = parseInt(limitInput, 10);
+      if (Number.isNaN(limit) || limit <= 0) limit = 50;
+      if (limit > 200) limit = 200; // NPI API limit
+
+      const url = buildNpiUrl({ taxonomy, state, limit });
+
+      statusText.textContent = "Searching NPI Registry…";
+      searchBtn.disabled = true;
+      downloadBtn.disabled = true;
+      resultsCard.style.display = "none";
+      resultsBody.innerHTML = "";
+      lastResults = [];
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error(`HTTP error ${res.status}`);
+        }
+        const data = await res.json();
+        const results = Array.isArray(data.results) ? data.results : [];
+        lastResults = results;
+        resultsCard.style.display = "block";
+        renderResults(results);
+        statusText.textContent = `Loaded ${results.length} result(s) from NPI Registry.`;
+      } catch (err) {
+        console.error(err);
+        statusText.textContent =
+          "Error fetching data. Check your internet connection or try again later.";
+        resultsCard.style.display = "none";
+      } finally {
+        searchBtn.disabled = false;
+      }
+    }
+
+    searchBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      runSearch();
+    });
+
+    downloadBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      downloadCsv();
+    });
+  </script>
+</body>
+</html>
